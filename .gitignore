@@ -1,0 +1,12 @@
+# We ignore everything then choose what to include.
+# This way we don't have to add all `*-data` folders to the .gitignore
+/*
+!.env.dist
+!.gitignore
+!docker-compose.yml
+!install.sh
+!README.md
+!secrets
+# Ignore secrets but not the dummy files to copy-paste
+secrets/*
+!secrets/*.dummy
