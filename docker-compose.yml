@@ -4,21 +4,6 @@ networks:
   koji:
 
 
-secrets:
-  # Don't forget to copy/modify the `./secrets/*.dummy` files and remove the extension
-  minio_user:
-    file: ./secrets/minio-user
-  minio_password:
-    file: ./secrets/minio-password
-  postgres_user:
-    file: ./secrets/postgres-user
-  postgres_password:
-    file: ./secrets/postgres-password
-  timescale_user:
-    file: ./secrets/timescale-user
-  timescale_password:
-    file: ./secrets/timescale-password
-
 services:
   # Visualization dashboard, used in Acrelec Recommendation Systems
   metabase:
@@ -39,16 +24,12 @@ services:
     image: minio/minio
     ports:
       - ${PORT_MINIO}:9000 # Syntax: [host_port]:[container_port]
-      - ${PORT_MINIO_CONSOLE}:9001
+      - ${PORT_MINIO_CONSOLE}:9001 # Syntax: [host_port]:[container_port]
     command: server --console-address ":9001" /data
-    environment:
-      MINIO_ROOT_USER_FILE: /run/secrets/minio_user
-      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_password
+    env_file:
+      - .env
     networks:
       - koji
-    secrets:
-      - minio_user
-      - minio_password
     volumes:
       - ./minio-data:/data # Syntax: [host_path]:[container_path]
 
@@ -57,15 +38,10 @@ services:
     image: postgres:alpine
     ports:
       - ${PORT_POSTGRES}:5432 # Syntax: [host_port]:[container_port]
-    environment:
-      POSTGRES_DB: default # default created database
-      POSTGRES_USER_FILE: /run/secrets/postgres_user
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    env_file:
+      - .env
     networks:
       - koji
-    secrets:
-      - postgres_user
-      - postgres_password
     volumes:
       - ./postgres-data:/var/lib/postgresql/data # Syntax: [host_path]:[container_path]
 
@@ -74,14 +50,9 @@ services:
     image: timescale/timescaledb:latest-pg12
     ports:
       - ${PORT_TIMESCALE}:5432 # Syntax: [host_port]:[container_port]
-    environment:
-      POSTGRES_DB: acrelec-recommendation # default created database
-      POSTGRES_USER_FILE: /run/secrets/timescale_user
-      POSTGRES_PASSWORD_FILE: /run/secrets/timescale_password
+    env_file:
+      - .env
     networks:
       - koji
-    secrets:
-      - timescale_user
-      - timescale_password
     volumes:
       - ./timescale-data:/var/lib/postgresql/data # Syntax: [host_path]:[container_path]
