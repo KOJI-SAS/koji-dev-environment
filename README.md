@@ -24,13 +24,20 @@ In case you don't want a specific container or want to remove it, just stop it f
 
 If using PostgreSQL, and you should since we're mostly using that at Koji and Timescale is a layer on top of PostgreSQL, you can:
 
-1. Launch a shell into the container you want to backup using the `Docker Desktop` application, or running the following command: `docker exec -it {container_id} /bin/sh`.
-2. Dump all your databases data with `pg_dumpall -O -c -U {postgres_user} -f dump_$(date +%Y-%m-%d_%H_%M_%S).sql`:
-    - `-O`: No owner. The user that will restore the databases will get ownership of all objects
+1. Launch a shell into the old container you want to backup using the `Docker Desktop` application, or running the following command: `docker exec -it {old_container_id} /bin/sh`.
+2. Dump all your databases data with `pg_dumpall -O -c -U {old_postgres_user} -f dump_$(date +%Y-%m-%d_%H_%M_%S).sql`:
+    - `-O`: No owner. The user that will restore the databases will get ownership of all objects. You can remove this flag, but be aware that the postgres user and password for the databases will change to the old one when restoring.
     - `-c`: Include SQL commands to clean (drop) databases before recreating them. DROP commands for roles and tablespaces are added as well.
-    - `-U`: Username to connect as. `{postgres_user}` should be postgres, or the user you set when creating the database.
-    - `-f`: Send output to the specified file
-3. Log out of the container and copy the dump file where you want: `docker cp {container_id}:{dump_file_path} {host_path}`.
-4. Do the same and copy the dump file to the new container: `docker cp {host_path} {new_container_id}:/`.
-5. Launch a shell into the new destination container using the `Docker Desktop` application, or running the following command: `docker exec -it {container_id} /bin/sh`.
-6. Restore the data using `psql`: `psql -U {postgres_user} -f {dump_file}`
+    - `-U`: Username to connect as. `{old_postgres_user}` should be postgres, or the user you set when creating the database.
+    - `-f`: Send output to the specified file. I've added the date for the dump but put what you want. :)
+3. Log out of the old container and copy the dump file where you want: `docker cp {old_container_id}:{dump_file_path} {host_path}`.
+4. Now do it the other way and copy the dump file to the new container: `docker cp {host_path} {new_container_id}:/`.
+5. Launch a shell into the new container using the `Docker Desktop` application, or running the following command: `docker exec -it {new_container_id} /bin/sh`.
+6. Restore the data using `psql`: `psql -U {new_postgres_user} -f {dump_file}`
+7. Enjoy you old data on fresh computer
+
+### My PostgreSQL DB does not respect my new username and password
+
+You need to be aware that there are now `*-data` folders. While it is nice because you can keep the data between containers, i also means that it will overwrites the container's data folder if the volume is not empty on the host.
+
+You can fix this by simply deleting the `*-data` in the git repo's folder. !!WARNING!!: You will delete the old data, be sure that it is what you want.
