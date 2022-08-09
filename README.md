@@ -6,8 +6,28 @@ You first need to copy all `secrets/*.dummy` files, remove the `.dummy` extensio
 
 Then copy the `.env.dist` to `.env` and edit the `*_PORT` values to anything you want.
 
+### Global koji environment
+
 Then simply run `./install.sh` and you are set. Docker will automatically pull the passwords from the files without storing them in your current environment, and will create the `*-data` folders or use those that exist.
 Alternatively, you can run `docker-compose up -d` but the project's name will simply be the name of the folder you ran the command in.
+
+### Containers
+
+- `Minio`: A S3 compatible object storage
+- `Postgres`: A PostgreSQL database used in most Koji projects
+
+### Specific environments
+
+You will notice there are extra `docker-compose.{project}.yml`. Those files are used to setup environments related to specific client or stacks that not everyone uses at Koji.
+If you need a Metabase dashboard with a timescale database for example, you can just run `./install.sh -f metabase`.
+The argument provided with the `-f` flag corresponds to the `{project}` part of the docker-compose file.
+If you want to install multiple environment just run each one with a `-f` flag. I.E: `./install.sh -f project1 -f project2 ...`
+All that is done "under the hood" is running `docker-compose -p koji -f docker-compose.yml -f docker-compose.project1.yml -f docker-compose.project2.yml ...`.
+
+### Metabase
+
+- `Timescale`: Another PostgreSQL database with time-based analytics on top
+- `Metabase`: A data visualization tool. It islinked to the default timescale database by default in this `docker-compose`
 
 ## Why?
 

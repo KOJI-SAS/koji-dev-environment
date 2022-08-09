@@ -14,32 +14,14 @@ secrets:
     file: ./secrets/postgres-user
   postgres_password:
     file: ./secrets/postgres-password
-  timescale_user:
-    file: ./secrets/timescale-user
-  timescale_password:
-    file: ./secrets/timescale-password
 
 services:
-  # Visualization dashboard, used in Acrelec Recommendation Systems
-  metabase:
-    image: metabase/metabase
-    ports:
-      - ${PORT_METABASE}:3000 # Syntax: [host_port]:[container_port]
-    depends_on:
-      - timescale
-    environment:
-      MB_DB_FILE: /metabase-data/metabase.db
-    networks:
-      - koji
-    volumes:
-      - ./metabase-data:/metabase-data
-
   # S3 compatible object storage
   minio:
     image: minio/minio
     ports:
-      - ${PORT_MINIO}:9000 # Syntax: [host_port]:[container_port]
-      - ${PORT_MINIO_CONSOLE}:9001
+      - ${MINIO_PORT}:9000 # Syntax: [host_port]:[container_port]
+      - ${MINIO_CONSOLE_PORT}:9001
     command: server --console-address ":9001" /data
     environment:
       MINIO_ROOT_USER_FILE: /run/secrets/minio_user
@@ -56,9 +38,9 @@ services:
   postgres:
     image: postgres:alpine
     ports:
-      - ${PORT_POSTGRES}:5432 # Syntax: [host_port]:[container_port]
+      - ${POSTGRES_PORT}:5432 # Syntax: [host_port]:[container_port]
     environment:
-      POSTGRES_DB: default # default created database
+      POSTGRES_DB: ${POSTGRES_NAME} # default created database
       POSTGRES_USER_FILE: /run/secrets/postgres_user
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     networks:
@@ -68,20 +50,3 @@ services:
       - postgres_password
     volumes:
       - ./postgres-data:/var/lib/postgresql/data # Syntax: [host_path]:[container_path]
-
-  # A postgres database for analytics, used in Acrelec Recommendation Systems
-  timescale:
-    image: timescale/timescaledb:latest-pg12
-    ports:
-      - ${PORT_TIMESCALE}:5432 # Syntax: [host_port]:[container_port]
-    environment:
-      POSTGRES_DB: acrelec-recommendation # default created database
-      POSTGRES_USER_FILE: /run/secrets/timescale_user
-      POSTGRES_PASSWORD_FILE: /run/secrets/timescale_password
-    networks:
-      - koji
-    secrets:
-      - timescale_user
-      - timescale_password
-    volumes:
-      - ./timescale-data:/var/lib/postgresql/data # Syntax: [host_path]:[container_path]
