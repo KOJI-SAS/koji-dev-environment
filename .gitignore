@@ -4,6 +4,7 @@
 !.env.dist
 !.gitignore
 !docker-compose.yml
+!docker-compose.metabase.yml
 !install.sh
 !README.md
 !secrets

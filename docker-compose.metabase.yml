@@ -1,0 +1,44 @@
+version: "3.9"
+
+networks:
+  koji:
+
+
+secrets:
+  # Don't forget to copy/modify the `./secrets/*.dummy` files and remove the extension
+  timescale_user:
+    file: ./secrets/timescale-user
+  timescale_password:
+    file: ./secrets/timescale-password
+
+services:
+  # Visualization dashboard, used in Acrelec Recommendation Systems
+  metabase:
+    image: metabase/metabase
+    ports:
+      - ${METABASE_PORT}:3000 # Syntax: [host_port]:[container_port]
+    depends_on:
+      - timescale
+    environment:
+      MB_DB_FILE: /data/metabase.db
+    networks:
+      - koji
+    volumes:
+      - ./metabase-data:/data # Syntax: [host_path]:[container_path]
+
+  # A postgres database for analytics, used in Acrelec Recommendation Systems
+  timescale:
+    image: timescale/timescaledb:latest-pg12
+    ports:
+      - ${TIMESCALE_PORT}:5432 # Syntax: [host_port]:[container_port]
+    environment:
+      POSTGRES_DB: ${TIMESCALE_DB} # default created database
+      POSTGRES_USER_FILE: /run/secrets/timescale_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/timescale_password
+    networks:
+      - koji
+    secrets:
+      - timescale_user
+      - timescale_password
+    volumes:
+      - ./timescale-data:/var/lib/postgresql/data # Syntax: [host_path]:[container_path]
